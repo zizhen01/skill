@@ -22,16 +22,63 @@ Accept any of these targets:
 
 - A public URL.
 - A local web app URL such as `http://localhost:3000`.
-- A desktop app or already-open browser/app that can be controlled with
-  Computer Use.
+- A desktop app or already-open browser/app that can be controlled with the
+  agent's available screen-control tools.
 - Optional login state, test credentials, desired viewport, or scope.
 - Optional save path. If omitted, save under the current working directory.
 
-Use browser automation first for web targets. Use Computer Use when the task
-depends on the user's real desktop state, installed apps, logged-in sessions,
-native UI, or mouse/keyboard interaction that browser automation cannot reach.
-If anti-bot protection blocks ordinary automation and a stealth browser skill
-is available, switch to that only when appropriate.
+Use browser automation first for web targets. Use the current agent/runtime's
+native screen-control and screenshot tool when the task depends on the user's
+real desktop state, installed apps, logged-in sessions, native UI, tray/menu-bar
+state, or mouse/keyboard interaction that browser automation cannot reach.
+Computer Use is the Codex desktop default; if the agent is not Codex, use that
+agent's own screenshot/control tool instead of assuming Computer Use exists or
+is the right capture source. If anti-bot protection blocks ordinary automation
+and a stealth browser skill is available, switch to that only when appropriate.
+
+## Native App And Tray Coverage
+
+For desktop/native apps, first establish all product surfaces before deep
+exploration:
+
+- Main window(s): foreground app window, secondary windows, preferences,
+  onboarding, modals, inspectors, command palettes, and document/editor views.
+- Menu bar / system tray / status item: determine whether the app has a
+  persistent tray/menu-bar surface, background mode, quick actions, status
+  indicators, notifications, or preferences reachable from the tray.
+- App menus: inspect native menus when they expose product commands,
+  preferences, import/export, help/about, or hidden feature entry points.
+- Background behavior: note whether closing the window quits the app, hides it
+  to tray/menu-bar, or leaves background services running.
+
+Many modern desktop apps are tray-first or tray-assisted. Do not call a native
+app exploration complete until you have explicitly checked for a tray/menu-bar
+surface or documented why it could not be checked.
+
+## Screenshot Integrity
+
+Screenshots are evidence. Verify every screenshot belongs to the target before
+using it in reports or counting it as coverage.
+
+Required checks for desktop/native apps:
+
+- Capture from the target app/window when the control tool supports it. Prefer
+  an app/window-scoped screenshot over full-screen capture.
+- If using OS-level screenshots, first activate or raise the target app, then
+  capture the specific target window or crop to verified window bounds. Do not
+  rely on blind full-screen capture when another app may be frontmost.
+- After capture, inspect the screenshot visually or with the available
+  screenshot preview/state output. Confirm the visible title, chrome, content,
+  or distinctive UI matches the target app.
+- If a screenshot shows the wrong app, discard it immediately, recapture, and
+  mention the correction only if it affected coverage or timing.
+- Before writing final reports, sample-check the saved files in `screenshots/`
+  against the page inventory. The screenshot file names, visible content, and
+  page notes must agree.
+
+For Codex desktop specifically, prefer the image returned by Computer Use or an
+app-scoped capture method for native apps. Avoid `screencapture` full-screen
+output unless you have verified the active app and the saved image content.
 
 ## Output Bundle
 
@@ -85,6 +132,7 @@ Always screenshot:
 
 - Entry page and first viewport.
 - Main navigation destinations and primary app surfaces.
+- Native app tray/menu-bar/status-item surfaces when present.
 - Each major step in a core task flow.
 - Major structural states: empty state, loading/skeleton, populated state,
   success, error, modal, drawer, command palette, editor/canvas state.
